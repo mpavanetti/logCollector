@@ -90,12 +90,24 @@ def check_files():
     stdOutErr = [path.abspath(x) for x in glob(config_files_path + stdOutErr_Files)]
     task = [path.abspath(x) for x  in glob(config_files_path + task_files)]
 
-    if not resuming and not task and not stdOutErr:
+    if not resuming and not stdOutErr:
         #print("Resuming, task and stdOutErr files were not found in source dir, Aborting operation...")
         return False
     else:    
         print("Files found, starting processing...")
         return True
+
+# In[315]:
+def check_k(x):
+    file = x
+    try:
+        if path.exists(file):
+            while path.exists(file) == True:
+                print("attempting to delete task log file [",file,"]")
+                remove(file)
+    except:
+        sleep(15)
+        check_k(file)
 
 
 # In[314]:
@@ -321,9 +333,10 @@ def parseLogs():
                                 
                                 # Deleting task files
                                 if(flagResult > 0):
-                                    remove(k)
+                                    print("Checking if the k file is still in the task folder...")
                                     task.remove(k)
-                                
+                                    check_k(k)
+                                    
                                 # Checking if the task has the execution terminated info
                                 if("EXECUTION_TERMINATED" in readTaskFile):
                                     taskAborted = True
@@ -448,7 +461,7 @@ def parseLogs():
                         # querying for jobs that has the running status in elasticsearch index
                         if(flagResult == 0):
                             # Check if the job running already exist in elasticsearch, if so, delete it
-                            if ((not taskAborted or not jobAborted) and jobRunningResult > 0):
+                            if ((taskAborted != True and jobAborted != True) and jobRunningResult > 0):
 
                                 # Elasticsearch Bulk delete by query
                                 es.delete_by_query(index=resumingIndex, body=deleteRunningbody)
@@ -458,6 +471,7 @@ def parseLogs():
                                 # Elasticsearch Insert Documents
                                 bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
                                 bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
+                                print("Talend Logs files has been successfully sent to Elasticsearch.")
 
 
                             # Check if the job was aborted and status is running still
@@ -473,12 +487,14 @@ def parseLogs():
                                 # Delete log files from jobs wich were aborted
                                 remove(i)
                                 remove(j)
-                                remove(k)
+                                print("Checking if the k file is still in the task folder...")
+                                check_k(k)
 
                             else:  
                                 # Elasticsearch Insert Documents
                                 bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
                                 bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
+                                print("Talend Logs files has been successfully sent to Elasticsearch.")
 
                         elif(flagResult > 0 and jobRunningResult > 0):
                             # Elasticsearch Bulk delete by query
@@ -489,19 +505,19 @@ def parseLogs():
                             # Elasticsearch Bulk insert documents
                             bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
                             bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
+                            print("Talend Logs files has been successfully sent to Elasticsearch.")
                             
                         else:
                             # Elasticsearch Bulk insert documents
                             bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
                             bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
+                            print("Talend Logs files has been successfully sent to Elasticsearch.")
                                         
                     else:
                         # Elasticsearch Bulk insert documents
                         bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
                         bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
-                        
-
-        print("Talend Logs files has been successfully sent to Elasticsearch.")
+                        print("Talend Logs files has been successfully sent to Elasticsearch.")
         return True
     
     except Exception as e:
