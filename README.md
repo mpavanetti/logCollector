@@ -63,7 +63,9 @@ You can enable the kibana legacy datatable visualization by opening yout kibana/
 vis_type_table.legacyVisEnabled: true
 ```
 After changing that, restart your kibana.  
-  
+
+## Metricbeat Recomendation
+
 I also recommend implementing the elastic beats such as MetricBeat, this is a nice and powerful system metrics log collector, this combined with the python agent is great.
 [Elastic Metricbeat](https://www.elastic.co/pt/beats/metricbeat)
   
