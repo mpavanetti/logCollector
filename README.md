@@ -44,16 +44,16 @@ Navigate to the agent folder Right click on the file stop_agent.bat **RUN AS ADM
 Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
 
 ## Some Kibana Dashboards Screenshots
-- Talend Logs Summary Dashboard:
+Talend Logs Summary Dashboard:
 ![Talend Summary Dashboard](img/SummaryDashboard.JPG)  
 
-- Talend Job Details Dashboard:
+Talend Job Details Dashboard:
 ![Talend Job Details](img/JobDetailsDashboard.JPG)  
 
-- Talend Studio logs (Inspect):
+Talend Studio logs (Inspect):
 ![Talend Studio Details](img/JobDetailsTalendStudio.JPG)  
 
-- Talend Cloud logs:
+Talend Cloud logs:
 ![Talend Cloud Details](img/JobDetailsTalendCloudTask.JPG)  
 
 ## Kibana Recomendation
