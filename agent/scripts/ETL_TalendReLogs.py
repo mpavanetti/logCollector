@@ -278,7 +278,7 @@ def parseLogs():
 
                         # Checking if the pid is correct matching resuming job name with artifact name plus time seconds difference must be between zero and five
                         if(taskArtifactName == resumingArtifactName):
-                            if(difference >= -1 and difference <=5):
+                            if(difference >= -1 and difference <=10):
 
                                 # Opening stdOutErr Files and splitting strings.
                                 with open(k,'r') as file:
