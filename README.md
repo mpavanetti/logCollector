@@ -13,11 +13,12 @@ The scripts parses the 3 log files and store them in elasticsearch indexes as th
 3. Load clean logs into elasticsearch indexes.
 4. Have data ready to be analyzed on kibana dashboards.
 
-## Files
+## Agent Files Info
 1. [Elasticsearch Index Templates Scripts](Elasticsearch%20Index%20Templates%20for%20Talend%20Logs.md) , commands for creating roles, users and indexes templates in your elasticsearch instance.
 2. [Kibana Talend Template](Kibana%20Talend%20Template.ndjson) for importing indexes patterns and kibana dashboards into your kibana instance.
 3. [Config.ini](agent/config.ini), file containing python agent configurations.
 4. [Install Agent](agent/install_agent.bat), Python Agent installer.
+5. [Python Agent ETL Script](agent/scripts/ETL_TalendReLogs.py)
 
 ## Installation Steps
 1. **[Check Out]** Download or git Clone this repository into a local directory of your preference, ex: D:\ELk\TalendReLogCollector 
