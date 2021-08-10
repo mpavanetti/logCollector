@@ -43,7 +43,7 @@ Navigate to the agent folder Right click on the file stop_agent.bat **RUN AS ADM
 ## Uninstall Agent
 Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
 
-## Some Screenshots
+## Some Kibana Dashboards Screenshots
 Talend Logs Summary Dashboard
 ![Talend Summary Dashboard](img/SummaryDashboard.JPG)  
 
@@ -52,6 +52,14 @@ Talend Job Details Dashboard
 
 Talend Studio logs (Inspect) 
 ![Talend Studio Details](img/JobDetailsTalendStudio.JPG)  
+
+## Kibana Recomendation
+I Personally prefer the legacy kibana datatable visualization mode, it's easier to see big column texts.  
+You can enable the kibana legacy datatable visualization by opening yout kibana/config/kibana.yml file and adding the following line in the end of the file:
+```
+vis_type_table.legacyVisEnabled: true
+```
+After changing that, restart your kibana.
 
 ## Future Releases Notes
 1. Record video and share screenshoots.
