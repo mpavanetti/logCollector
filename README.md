@@ -33,12 +33,23 @@ The scripts parses the 3 log files and store them in elasticsearch indexes as th
 5. Right click on the file install_agent.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, then the installer takes care for you of prepararing the python virtual environment, installing libraries and deploying the python code as a windows system service. that's it !
 6. Check the recent imported kibana dashboards to make sure all of your logs are good so far.
 
+## Start Agent (Manually)
+Note, when you install the agent for the first time, it automatically starts the service and setup the service to start with the operating system.
+In case you need to start it manually, Navigate to the agent folder Right click on the file start_agent.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
+
+## Stop Agent
+Navigate to the agent folder Right click on the file stop_agent.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
+
+# Uninstall Agent
+Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
+
 ## Future Releases Notes
 1. Record video and share screenshoots.
-2. Implement encryption or keystore for Elasticsearch password vault in config.ini file.
-3. Implement logger in python methods for logging and debugging porpuse.
-4. Implement kibana alerts for kibana paid version.
-5. Improve Kibana dashboards.
+2. Implement Bash scripts for linux.
+3. Implement encryption or keystore for Elasticsearch password vault in config.ini file.
+4. Implement logger in python methods for logging and debugging porpuse.
+5. Implement kibana alerts for kibana paid version.
+6. Improve Kibana dashboards.
 
 ## Credits
 Matheus Pavanetti - 2021
