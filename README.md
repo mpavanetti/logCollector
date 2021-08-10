@@ -40,7 +40,7 @@ In case you need to start it manually, Navigate to the agent folder Right click 
 ## Stop Agent
 Navigate to the agent folder Right click on the file stop_agent.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
 
-# Uninstall Agent
+## Uninstall Agent
 Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
 
 ## Future Releases Notes
