@@ -43,6 +43,16 @@ Navigate to the agent folder Right click on the file stop_agent.bat **RUN AS ADM
 ## Uninstall Agent
 Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMINISTRATOR**, otherwise it won't work, and hit enter once it finishes.
 
+## Some Screenshots
+Talend Logs Summary Dashboard
+![Talend Summary Dashboard](img/SummaryDashboard.JPG)  
+
+Talend Job Details Dashboard
+![Talend Job Details](img/JobDetailsDashboard.JPG)  
+
+Talend Studio logs (Inspect) 
+![Talend Studio Details](img/JobDetailsTalendStudio.JPG)  
+
 ## Future Releases Notes
 1. Record video and share screenshoots.
 2. Implement Bash scripts for linux.
@@ -52,7 +62,7 @@ Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMI
 6. Improve Kibana dashboards.
 
 ## Credits
-Matheus Pavanetti - 2021
+Matheus Pavanetti - 2021  
 (matheuspavanetti@gmail.com)
 
 ## Contributors
