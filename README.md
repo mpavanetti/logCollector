@@ -21,11 +21,11 @@ The scripts parses the 3 log files and store them in elasticsearch indexes as th
 
 ## Installation Steps
 1. [Check Out] Download or git Clone this repository into a local directory of your preference, ex: D:\ELk\TalendReLogCollector 
-2. [Elasticsearch Commands] Have access to your Elasticsearch cluster through kibana dev tool or cURL, open up the file **Elasticsearch Index Templates for Talend Logs.md** (github preferred), follow up the instructions and run all the commands in your elasticsearch cluster.
+2. [Elasticsearch Commands] Have access to your Elasticsearch cluster through kibana dev tool or cURL, open up the file [Elasticsearch Index Templates Scripts](Elasticsearch%20Index%20Templates%20for%20Talend%20Logs.md) (github preferred), follow up the instructions and run all the commands in your elasticsearch cluster.
 3. [Kibana Dashboards] Have access to your kibana instance, open the left side navegation bar, go to Management tab, click on **Stack Management**, then go to Kibana and click on **Saved Objects**, Click on **import** on your right top corner, in the Select a file to import area, drag the file [Kibana Talend Template](Kibana%20Talend%20Template.ndjson) or cliclk import and find this file, in the Import Options, let it as is (Automatically overwrite conflicts) , then finally click in **Import**, ( 7 objects should be imported ) and then **Done** .
-4. [Python Agent] Go to the folder **agent**, edit the file config.ini using notepad, make sure you have all setup following your environment.
+4. [Python Agent] Go to the folder **agent**, edit the file [Config.ini](agent/config.ini) using notepad, make sure you have all setup following your environment.
 
-## Python Agent config.ini [Sample]
+**Python Agent config.ini [Sample]**
 ```
 [Application]
 start = True
@@ -45,7 +45,7 @@ resuming_mask = *_*/resuming_*.log
 stdoutErr_mask = *_*/stdOutErr_*.log
 task_mask = */*-*-*-*-*.log
 ```
-## config.ini explanation
+**config.ini explained**
 On the Application section, you can configure the start trigger, (True for enable the agent and False for disable it), seconds determine how often your talend remote engine logs are checked, let it as is.
 On the Elasticsearch section, you can configure your elasticsearch environment, specifying host, login, password, port, etc.
 On the TalendLogFiles, you can specify your Talend Remote Engine log directory path, don't change the mask parameters.
@@ -63,13 +63,14 @@ Check the recent imported kibana dashboards to make sure all of your logs are go
 
 ## Credits
 Matheus Pavanetti - 2021
-matheuspavanetti@gmail.commands
+(matheuspavanetti@gmail.com)
 
 ## Contributors
 New Contributors are always welcome !
 
 ## Notes
 As this is a beta version, bugs may be found, if you find some, please report immediatly !
+Feel free to change the elasticsearch talend user password !
 
 Thank you !
 
