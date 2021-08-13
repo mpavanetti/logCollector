@@ -295,14 +295,13 @@ def parseLogs():
                                 # Opening stdOutErr Files and splitting strings.
                                 with open(k,'r') as file:
                                     readTaskFile = file.read()
-                                    datetimeTask = datetime.strptime(new_resuming_df['pid'].drop_duplicates()[0].split("_")[0], '%Y%m%d%H%M%S')
-                                    datetimeTaskYear = str(datetimeTask.year)
-                                    datetimeTaskMonth = str(datetimeTask.month)
+                                    datetimeTaskYear = str(taskDateTimeWith_timezone.year)
+                                    datetimeTaskMonth = str(taskDateTimeWith_timezone.month)
 
                                 # Creating Result Task Dict    
                                 result_taskDict = {
                                     "pid": new_resuming_df['pid'].drop_duplicates()[0],
-                                    "datetime": task_df['datetime'][10].replace(",","").strip().split(':')[1].strip().replace("\"",""),
+                                    "datetime": taskDateTimeWith_timezone,
                                     "jobName": new_resuming_df['jobName'].drop_duplicates()[0],
                                     "task_id": task_df['datetime'][13].replace(",","").strip().split(':')[1].strip().replace("\"",""),
                                     "task_execution_id": task_df['datetime'][4].replace(",","").strip().split(':')[1].strip().replace("\"",""),
