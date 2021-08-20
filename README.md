@@ -47,7 +47,7 @@ Navigate to the agent folder Right click on the file uninstall.bat **RUN AS ADMI
 ## Some Kibana Dashboards Screenshots
 Talend Logs Summary Dashboard:
 
-![Talend Summary Dashboard](img/SummaryDashboard.JPG)  
+![Talend Summary Dashboard](img/SummaryDashboard1.JPG)  
 
 Talend Logs Summary Dashboard 2:
 
@@ -59,7 +59,7 @@ Talend Logs Summary Dashboard 3:
 
 Talend Job Details Dashboard:
 
-![Talend Job Details](img/JobDetailsDashboard.JPG) 
+![Talend Job Details](img/JobDetailsDashboard1.JPG) 
 
 Talend Job Details Dashboard 2:
 
