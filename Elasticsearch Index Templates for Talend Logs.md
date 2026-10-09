@@ -35,7 +35,7 @@ POST _xpack/security/role/talendlog_ilm
 ```
 POST /_xpack/security/user/talendlog_internal
 {
-  "password" : "***REMOVED***",
+  "password" : "<choose a strong password>",
   "roles" : [ "talendlog_writer","talendlog_ilm"],
   "full_name" : "Internal Talendlog User"
 }

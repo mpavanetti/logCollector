@@ -106,7 +106,7 @@ New Contributors are always welcome !
 
 ## Notes
 As this is a beta version, bugs may be found, if you find some, please report immediatly !
-Feel free to change the elasticsearch talend user password !
+Choose your own password for the elasticsearch talend user, and give it to the agent with the ELASTICSEARCH_PASSWORD environment variable (or in config.ini, kept out of version control).
 
 Thank you !
 

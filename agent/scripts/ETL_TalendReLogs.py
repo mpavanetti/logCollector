@@ -19,7 +19,7 @@
 # Importing Libraries
 from pandas import DataFrame,read_csv,to_datetime,merge
 from datetime import datetime
-from os import path,remove
+from os import path,remove, environ
 from glob import glob
 from shutil import rmtree
 from time import sleep
@@ -54,7 +54,8 @@ def boolean(x):
 # Starting an Elasticsearch client instance
 es = Elasticsearch(
     [config['Elasticsearch']['host']],
-    http_auth=(config['Elasticsearch']['login'], config['Elasticsearch']['password']),
+    # The password from the environment when set, so it needn't sit in config.ini.
+    http_auth=(config['Elasticsearch']['login'], environ.get('ELASTICSEARCH_PASSWORD') or config['Elasticsearch']['password']),
     scheme=config['Elasticsearch']['scheme'],
     port=int(config['Elasticsearch']['port']),
     http_compress=boolean(config['Elasticsearch']['http_compress'])
