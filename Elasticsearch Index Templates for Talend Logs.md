@@ -5,7 +5,7 @@ Make sure you are running all these commands below in your elasticsearch cluster
 
 ## Creating user role policy talendlog_writer for reading, writing and create indexes 
 ```
-POST _xpack/security/role/talendlog_writer
+POST _security/role/talendlog_writer
 {
   "cluster": ["manage_index_templates","monitor","manage_ingest_pipelines"], 
   "indices": [
@@ -19,7 +19,7 @@ POST _xpack/security/role/talendlog_writer
 
 ## Role for ILM (Index Lifecycle Management) talendlog_ilm
 ```
-POST _xpack/security/role/talendlog_ilm
+POST _security/role/talendlog_ilm
 {
   "cluster": ["manage_ilm"],
   "indices": [
@@ -33,7 +33,7 @@ POST _xpack/security/role/talendlog_ilm
 
 ## Creating talendlog_internal user
 ```
-POST /_xpack/security/user/talendlog_internal
+POST /_security/user/talendlog_internal
 {
   "password" : "<choose a strong password>",
   "roles" : [ "talendlog_writer","talendlog_ilm"],
@@ -42,19 +42,12 @@ POST /_xpack/security/user/talendlog_internal
 ```
 
 ## ILM for deleting talend logs after a period of time.
+The agent writes to monthly indexes itself, so the policy has no rollover (which needs a write alias the agent doesn't use, and left ILM stuck in an error before the delete phase): each index is deleted 67 days after it is created.
 ```
 PUT _ilm/policy/talendlogs_policy   
 {
   "policy": {                       
     "phases": {
-      "hot": {                      
-        "actions": {
-          "rollover": {             
-            "max_size": "5GB",
-            "max_age": "60d"
-          }
-        }
-      },
       "delete": {
         "min_age": "67d",           
         "actions": {
@@ -75,7 +68,6 @@ PUT /_template/talendlog-resuming
     "number_of_shards": 1,
     "number_of_replicas": 1,
     "index.lifecycle.name": "talendlogs_policy",
-    "index.lifecycle.rollover_alias": "talendlogs",
     "index.mapping.coerce": false
   }, 
   "mappings": {
@@ -133,7 +125,6 @@ PUT /_template/talendlog-stdouterr
     "number_of_shards": 1,
     "number_of_replicas": 1,
     "index.lifecycle.name": "talendlogs_policy",
-    "index.lifecycle.rollover_alias": "talendlogs",
     "index.mapping.coerce": false
   }, 
   "mappings": {
@@ -167,7 +158,6 @@ PUT /_template/talendlog-task
     "number_of_shards": 1,
     "number_of_replicas": 1,
     "index.lifecycle.name": "talendlogs_policy",
-    "index.lifecycle.rollover_alias": "talendlogs",
     "index.mapping.coerce": false
   }, 
   "mappings": {
