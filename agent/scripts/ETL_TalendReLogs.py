@@ -38,7 +38,7 @@ import pytz
 
 # configparser initialization
 config = ConfigParser()
-config.read(path.dirname(__file__)+"\..\config.ini")
+config.read(path.join(path.dirname(path.abspath(__file__)), '..', 'config.ini'))
 #config.sections()
 
 def boolean(x):
@@ -58,7 +58,9 @@ es = Elasticsearch(
     http_auth=(config['Elasticsearch']['login'], environ.get('ELASTICSEARCH_PASSWORD') or config['Elasticsearch']['password']),
     scheme=config['Elasticsearch']['scheme'],
     port=int(config['Elasticsearch']['port']),
-    http_compress=boolean(config['Elasticsearch']['http_compress'])
+    http_compress=boolean(config['Elasticsearch']['http_compress']),
+    # With scheme = https the server certificate is verified; ca_certs names a private CA's certificate.
+    ca_certs=config['Elasticsearch'].get('ca_certs') or None
 )
 
 
@@ -101,14 +103,13 @@ def check_files():
 # In[315]:
 def check_k(x):
     file = x
-    try:
-        if path.exists(file):
-            while path.exists(file) == True:
-                print("attempting to delete task log file [",file,"]")
-                remove(file)
-    except:
-        sleep(15)
-        check_k(file)
+    # Retry until the remote engine lets go of the file (in a loop: retrying by recursion would overflow the stack)
+    while path.exists(file):
+        try:
+            print("attempting to delete task log file [",file,"]")
+            remove(file)
+        except OSError:
+            sleep(15)
 
 
 # In[314]:
@@ -129,7 +130,7 @@ def parseLogs():
 
         # Looping over resuming, stdOutErr and task (sequentially).
         for i in resuming:
-            resumingPid = i.split('\\')[-1].replace(".log","").replace("resuming_","")
+            resumingPid = path.basename(i).replace(".log","").replace("resuming_","")
             resumingDate = datetime.strptime(resumingPid.split('_')[0], '%Y%m%d%H%M%S')
             resumingDateWith_timezone = timezone.localize(resumingDate)
             resumingYear = str(resumingDateWith_timezone.year)
@@ -137,7 +138,7 @@ def parseLogs():
             
             # Looping over stdOutErr
             for j in stdOutErr:
-                stdOutErrPid = j.split('\\')[-1].replace(".log","").replace("stdOutErr_","")
+                stdOutErrPid = path.basename(j).replace(".log","").replace("stdOutErr_","")
                 stdOutErrDate = datetime.strptime(stdOutErrPid.split('_')[0], '%Y%m%d%H%M%S')
                 stdOutErrWith_timezone = timezone.localize(stdOutErrDate)
                 stdOutErrYear = str(stdOutErrWith_timezone.year)
@@ -147,7 +148,7 @@ def parseLogs():
                 if(resumingPid == stdOutErrPid):
 
                     # Creating a dataframe for resuming files.
-                    resuming_df = read_csv(i,sep = ',', engine = 'python')
+                    resuming_df = read_csv(i,sep = ',', engine = 'python', encoding_errors='replace')
                     
                     # remove extra strings from column JobContext
                     resuming_df['context'] = resuming_df['jobContext'].str.split('_').str[0]
@@ -233,9 +234,9 @@ def parseLogs():
                     new_resuming_df = resuming_df[['datetime','pid','type','partName','project','jobName','context','jobVersion','logPriority','errorCode','message','result','duration']].fillna("")
 
                     # Opening stdOutErr Files and splitting strings.
-                    with open(j,'r') as file:
+                    with open(j,'r',errors='replace') as file:
                         filePath = j
-                        filename = filePath.split("\\")[-1]
+                        filename = path.basename(filePath)
                         pid = filename.replace("stdOutErr_","").replace(".log","")
                         readFile = file.read()
                         datetimeStr = datetime.strptime(pid.split("_")[0], '%Y%m%d%H%M%S')
@@ -261,22 +262,20 @@ def parseLogs():
                     resumingXstdOutErrDf = merge(left=new_resuming_df,right=stdOutErrDf, left_on='pid',right_on='pid')
                     resumingXstdOutErrDfFiltered = resumingXstdOutErrDf[['pid','datetime2','jobName','fileName','studioLogs']].drop_duplicates()
                     
-                    # Deleting resuming and stdoutrr files
-                    if(flagResult > 0):
-                        remove(j)
-                        stdOutErr.remove(j)
-                        remove(i)
-                        resuming.remove(i)
-                        
+                    # Task log of this job, when the loop below finds it
+                    taskIndex = None
+                    taskFile = None
+                    taskAborted = False
+
                     # Looping over task log files
                     for k in task:
 
                         # Creating a dataframe for task files.
-                        task_df = read_csv(k,sep = '|', engine = 'python', index_col=False, 
+                        task_df = read_csv(k,sep = '|', engine = 'python', index_col=False, encoding_errors='replace',
                                          names=['datetime', 'loglevel', 'thread', 'action','location','message']).iloc[ 0:20 , : ]
 
-                        # Getting Artifact Name
-                        if(task_df[task_df.columns[0]].count() >= 11):
+                        # Getting Artifact Name, once the header (lines 0 to 18, all read below) is written
+                        if(task_df[task_df.columns[0]].count() >= 19):
                             taskArtifactName = task_df['datetime'][11].replace(",","").strip().split(':')[1].strip().replace("\"","")
                         else:
                             continue
@@ -294,7 +293,7 @@ def parseLogs():
                             if(difference >= -1 and difference <=10):
 
                                 # Opening stdOutErr Files and splitting strings.
-                                with open(k,'r') as file:
+                                with open(k,'r',errors='replace') as file:
                                     readTaskFile = file.read()
                                     datetimeTaskYear = str(taskDateTimeWith_timezone.year)
                                     datetimeTaskMonth = str(taskDateTimeWith_timezone.month)
@@ -326,16 +325,10 @@ def parseLogs():
                                 }
                                 result_taskDF = DataFrame(result_taskDict, index=[0]) # Assigning a DataFrame
 
-                                # Inserting task documents to elasticsearch index
+                                # Task documents, sent to elasticsearch with the job's other logs below
                                 taskIndex = 'talendlog-task-'+datetimeTaskYear+'-'+datetimeTaskMonth+'-000001'
                                 taskIndexDict = result_taskDF.to_dict(orient="records")
-                                bulk(es,taskIndexDict,index=taskIndex,request_timeout=200) # Elasticsearch bulk insert
-                                
-                                # Deleting task files
-                                if(flagResult > 0):
-                                    print("Checking if the k file is still in the task folder...")
-                                    task.remove(k)
-                                    check_k(k)
+                                taskFile = k
                                     
                                 # Checking if the task has the execution terminated info
                                 if("EXECUTION_TERMINATED" in readTaskFile):
@@ -343,47 +336,10 @@ def parseLogs():
                                 else:
                                     taskAborted = False
 
-                                # Removing jobs running from the list array
-                                #if(flagResult == 0 and taskAborted == False):
-                                if(flagResult == 0):
-                                    task.remove(k)
+                                # One task log per job: take it off the list and stop looking
+                                task.remove(k)
+                                break
                     
-                    
-                    # Elasticsearch running query body
-                    runningBody = {
-                          "query": {
-                            "bool": {
-                              "filter": [
-                                {
-                                  "term": {
-                                    "pid": {
-                                      "value": resumingPid
-                                    }
-                                  }
-                                },
-                                {
-                                  "term": {
-                                    "type": {
-                                      "value": "JOB_STARTED"
-                                    }
-                                  }
-                                },
-                                {
-                                  "term": {
-                                    "result": {
-                                      "value": "RUNNING"
-                                    }
-                                  }
-                                }
-                              ], 
-                              "must": [
-                                {
-                                  "match_all": {}
-                                }
-                              ]
-                            }
-                          }
-                        }
                     
                     # Elasticsearch delete by query body
                     deleteRunningbody = {
@@ -396,52 +352,10 @@ def parseLogs():
                               }
                             }
                     
-                    
-                    # Update by query , aborted
-                    updateAbortedBody = {
-                         "script": {
-                            "inline": "ctx._source.result='ABORTED'",
-                            "lang": "painless"
-                         },
-                         "query": {
-                            "bool": {
-                              "filter": [
-                                {
-                                  "term": {
-                                    "pid": {
-                                      "value": resumingPid
-                                    }
-                                  }
-                                },
-                                {
-                                  "term": {
-                                    "type": {
-                                      "value": "JOB_STARTED"
-                                    }
-                                  }
-                                },
-                                {
-                                  "term": {
-                                    "result": {
-                                      "value": "RUNNING"
-                                    }
-                                  }
-                                }
-                              ], 
-                              "must": [
-                                {
-                                  "match_all": {}
-                                }
-                              ]
-                            }
-                          }
-                       } 
-                    
-                    updateRunning = {
-                      "doc": {
-                        "result": "ABORTED"
-                      }
-                    }
+                    # A job that stopped before it ended (by a user, or its task was terminated) is aborted
+                    jobWasAborted = (flagResult == 0 and (taskAborted or jobAborted))
+                    if(jobWasAborted):
+                        new_resuming_df.loc[new_resuming_df['result'] == "RUNNING", 'result'] = "ABORTED"
                     
                     # resuming documents to elasticsearch index 
                     resumingIndex = 'talendlog-resuming-'+resumingYear+'-'+resumingMonth+'-000001'
@@ -451,73 +365,32 @@ def parseLogs():
                     stdOutErrIndex = 'talendlog-stdouterr-'+stdOutErrYear+'-'+stdOutErrMonth+'-000001'
                     stdOutErrDict = resumingXstdOutErrDfFiltered.to_dict(orient="records")
                     
-                    # Checking if the index exist if not, create the index and bulk insert the document
-                    if (es.indices.exists(index=resumingIndex) and es.indices.exists(index=stdOutErrIndex) and es.indices.exists(index=taskIndex)):
-                        
-                        # Searching for the match document
-                        jobRunning = es.search(index=resumingIndex, body=runningBody)
-                        jobRunningResult = int(jobRunning['hits']['total']['value'])
-                    
-                        # querying for jobs that has the running status in elasticsearch index
-                        if(flagResult == 0):
-                            # Check if the job running already exist in elasticsearch, if so, delete it
-                            if ((taskAborted != True and jobAborted != True) and jobRunningResult > 0):
+                    try:
+                        # Running jobs are sent on every pass: delete what an earlier pass sent for this job
+                        # before sending its logs again, so nothing is duplicated (or deleted after sending).
+                        for index in (resumingIndex, stdOutErrIndex, taskIndex):
+                            if (index and es.indices.exists(index=index)):
+                                es.delete_by_query(index=index, body=deleteRunningbody)
 
-                                # Elasticsearch Bulk delete by query
-                                es.delete_by_query(index=resumingIndex, body=deleteRunningbody)
-                                es.delete_by_query(index=stdOutErrIndex, body=deleteRunningbody)
-                                es.delete_by_query(index=taskIndex, body=deleteRunningbody)
-
-                                # Elasticsearch Insert Documents
-                                bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
-                                bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
-                                print("Talend Logs files has been successfully sent to Elasticsearch.")
-
-
-                            # Check if the job was aborted and status is running still
-                            elif ((taskAborted or jobAborted) and jobRunningResult > 0):
-
-                                # Elasticsearch Update (Alternative)
-                                #jobRunningId = jobRunning['hits']['hits'][0]['_id']
-                                #es.update(index=resumingIndex,id=jobRunningId,body=updateRunning)
-
-                                # Elasticsearch update by query
-                                es.update_by_query(index=resumingIndex, body=updateAbortedBody)
-
-                                # Delete log files from jobs wich were aborted
-                                remove(i)
-                                remove(j)
-                                print("Checking if the k file is still in the task folder...")
-                                check_k(k)
-
-                            else:  
-                                # Elasticsearch Insert Documents
-                                bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
-                                bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
-                                print("Talend Logs files has been successfully sent to Elasticsearch.")
-
-                        elif(flagResult > 0 and jobRunningResult > 0):
-                            # Elasticsearch Bulk delete by query
-                            es.delete_by_query(index=resumingIndex, body=deleteRunningbody)
-                            es.delete_by_query(index=stdOutErrIndex, body=deleteRunningbody)
-                            es.delete_by_query(index=taskIndex, body=deleteRunningbody)
-
-                            # Elasticsearch Bulk insert documents
-                            bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
-                            bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
-                            print("Talend Logs files has been successfully sent to Elasticsearch.")
-                            
-                        else:
-                            # Elasticsearch Bulk insert documents
-                            bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
-                            bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
-                            print("Talend Logs files has been successfully sent to Elasticsearch.")
-                                        
-                    else:
                         # Elasticsearch Bulk insert documents
                         bulk(es, resumingElasticDict, index=resumingIndex, request_timeout=200) #Elasticsearch bulk insert
                         bulk(es,stdOutErrDict,index=stdOutErrIndex,request_timeout=200) #Elasticsearch bulk insert
+                        if(taskIndex):
+                            bulk(es,taskIndexDict,index=taskIndex,request_timeout=200) #Elasticsearch bulk insert
                         print("Talend Logs files has been successfully sent to Elasticsearch.")
+                    except Exception as e:
+                        # The files stay for the next pass; carry on with the other jobs.
+                        print("Could not send the logs of job", resumingPid, "to Elasticsearch:")
+                        print(e)
+                        continue
+
+                    # Deleting the files of ended or aborted jobs, only now that Elasticsearch has them
+                    if(flagResult > 0 or jobWasAborted):
+                        remove(j)
+                        remove(i)
+                        if(taskFile):
+                            print("Checking if the k file is still in the task folder...")
+                            check_k(taskFile)
         return True
     
     except Exception as e:

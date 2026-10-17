@@ -23,7 +23,7 @@ The scripts parses the 3 log files and store them in elasticsearch indexes as th
 ## Installation Steps
 1. **[Check Out]** Download or git Clone this repository into a local directory of your preference, ex: D:\ELk\TalendReLogCollector 
 2. **[Elasticsearch Commands]** Have access to your Elasticsearch cluster through kibana dev tool or cURL, open up the file [Elasticsearch Index Templates Scripts](Elasticsearch%20Index%20Templates%20for%20Talend%20Logs.md) (github preferred), follow up the instructions and run all the commands in your elasticsearch cluster.
-3. **[Kibana Dashboards]** Have access to your kibana instance, open the left side navegation bar, go to Management tab, click on **Stack Management**, then go to Kibana and click on **Saved Objects**, Click on **import** on your right top corner, in the Select a file to import area, drag the file [Kibana Talend Template](Kibana%20Talend%20Template.ndjson) or cliclk import and find this file, in the Import Options, let it as is (Automatically overwrite conflicts) , then finally click in **Import**, ( 7 objects should be imported ) and then **Done** .
+3. **[Kibana Dashboards]** Have access to your kibana instance, open the left side navegation bar, go to Management tab, click on **Stack Management**, then go to Kibana and click on **Saved Objects**, Click on **import** on your right top corner, in the Select a file to import area, drag the file [Kibana Talend Template](Kibana%20Talend%20Template.ndjson) or cliclk import and find this file, in the Import Options, let it as is (Automatically overwrite conflicts) , then finally click in **Import**, ( 19 objects should be imported ) and then **Done** .
 4. **[Python Agent]** Go to the folder **agent**, edit the file [Config.ini](agent/config.ini) using notepad, make sure you have all setup following your environment.
 
 	**[config.ini info]**
@@ -106,7 +106,12 @@ New Contributors are always welcome !
 
 ## Notes
 As this is a beta version, bugs may be found, if you find some, please report immediatly !
-Choose your own password for the elasticsearch talend user, and give it to the agent with the ELASTICSEARCH_PASSWORD environment variable (or in config.ini, kept out of version control).
+Choose your own password for the elasticsearch talend user, and give it to the agent with the ELASTICSEARCH_PASSWORD environment variable (or in config.ini, kept out of version control). The agent runs as a Windows service, so set the variable on the service, from the agent folder as administrator, then restart it:
+```
+installers\nssm.exe set TalendPyLogCollector AppEnvironmentExtra ELASTICSEARCH_PASSWORD=<password>
+installers\nssm.exe restart TalendPyLogCollector
+```
+When Elasticsearch runs on another machine, prefer scheme = https in config.ini, so the login isn't sent in clear text; for a certificate from a private CA, give its path in ca_certs.
 
 Thank you !
 
