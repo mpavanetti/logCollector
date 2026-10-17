@@ -16,9 +16,9 @@ GOTO AGENT
 
 :INSTALL
 echo TalendEnv was not found, attempting to run install_agent.bat
-CALL %~dp0install_agent.bat
+CALL "%~dp0install_agent.bat"
 GOTO MAIN
 
 :AGENT
 echo Starting Talend Log Collector python script...
-py %~dp0\scripts\ETL_TalendReLogs.py
+py "%~dp0scripts\ETL_TalendReLogs.py"

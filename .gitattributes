@@ -1,0 +1,2 @@
+# cmd.exe can miss GOTO labels in batch files with LF line endings, so check them out with CRLF
+*.bat text eol=crlf

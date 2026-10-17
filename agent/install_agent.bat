@@ -11,9 +11,10 @@ IF EXIST "C:\Python\Environments\TalendEnv\Scripts\activate.bat" ( GOTO RUN ) EL
 :RUN
   echo Talend Environment Found !
   echo Installing Windows Service...
-  %~dp0installers\nssm.exe install TalendPyLogCollector %~dp0\LogCollector.bat [SERVICE_AUTO_START: Automatic]
+  "%~dp0installers\nssm.exe" install TalendPyLogCollector "%~dp0LogCollector.bat"
+  "%~dp0installers\nssm.exe" set TalendPyLogCollector Start SERVICE_AUTO_START
   echo Starting Windows Service...
-  %~dp0installers\nssm.exe start TalendPyLogCollector
+  "%~dp0installers\nssm.exe" start TalendPyLogCollector
   echo.
   echo Installation Finished Please, Close this windows !
   pause
@@ -24,24 +25,27 @@ GOTO :EOF
   echo Talend python Environment was not found
   echo checking if python is installed...
 
-  reg query "hkcu\software\Python"
+  REM The py launcher is what creates the environment, whether Python is installed per user or for all users
+  py --version
 
   if ERRORLEVEL 1 GOTO NOPYTHON
   echo Python was found
-  echo installping pip3 virtualenv...
-  pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org virtualenv
   echo creating virtual env directory...
   mkdir "C:\Python\Environments\"
   echo finding virtual env directory...
-  cd "C:\Python\Environments\"
+  REM /d: the agent may sit on another drive than C:
+  cd /d "C:\Python\Environments\"
   echo creating TalendEnv...
   py -m venv TalendEnv
   echo Activating TalendEnv...
   CALL C:\Python\Environments\TalendEnv\Scripts\activate.bat
+  REM pip verifies PyPI's certificates. Behind a TLS-inspecting proxy, point it at that proxy's CA:
+  REM   pip config set global.cert C:\path\to\proxy-ca.pem
   echo Installing python elasticsearch...
-  pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org elasticsearch
+  REM The 7.x client, as the agent and the Kibana objects are written for Elasticsearch 7
+  pip3 install "elasticsearch<8"
   echo Installing python pandas...
-  pip3 install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org pandas
+  pip3 install pandas pytz
   echo deactivating TalendEnv...
   GOTO :MAIN
 
